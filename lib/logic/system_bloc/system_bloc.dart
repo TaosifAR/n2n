@@ -22,12 +22,15 @@ class SystemBloc extends Bloc<SystemEvent, SystemState> {
     on<ServerStatusUpdated>((event, emit) {
       if (event.status == 'maintenance') {
         emit(SystemMaintenance());
-      }else if (event.status == 'update'){
-        emit(SystemUpdateRequired("https://play.google.com/store/apps/details?id=n2n"))
-
-      } else if (event.status == 'server_down'){
+      } else if (event.status == 'update') {
+        emit(
+          SystemUpdateRequired(
+            "https://play.google.com/store/apps/details?id=n2n",
+          ),
+        );
+      } else if (event.status == 'server_down') {
         emit(SystemServerError());
-      }else{
+      } else {
         emit(SystemNormal());
       }
     });
