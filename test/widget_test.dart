@@ -1,30 +1,19 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'dart:isolate';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:n2n/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('System monitoring smoke test', (WidgetTester tester) async {
+    // ১. একটি নকল ReceivePort তৈরি করা কারণ MyApp এটি চায়
+    final receivePort = ReceivePort();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // ২. আমাদের নতুন MyApp বিল্ড করা
+    await tester.pumpWidget(MyApp(receivePort: receivePort));
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // ৩. চেক করা যে স্ক্রিনে স্বাগতম মেসেজটি আছে কি না (Normal State)
+    // দ্রষ্টব্য: শুরুতে SystemInitial থাকে, তাই কিছুটা অপেক্ষা করতে হতে পারে
+    expect(find.textContaining('n2n'), findsWidgets);
+    
+    receivePort.close(); // টেস্ট শেষে পোর্ট বন্ধ করা
   });
 }
