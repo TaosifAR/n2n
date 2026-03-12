@@ -11,6 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final receivePort = ReceivePort();
+  // Spawning the background monitor isolate
   await Isolate.spawn(BackgrouondMonitor.start, receivePort.sendPort);
   runApp(MyApp(receivePort: receivePort));
 }
@@ -18,22 +19,35 @@ void main() async {
 class MyApp extends StatelessWidget {
   final ReceivePort receivePort;
   const MyApp({super.key, required this.receivePort});
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
+      lazy: false, // Ensure Bloc is created immediately
       create: (context) {
         final bloc = SystemBloc();
-        receivePort.listen((message){
-          if(message is String){
-            bloc..add(ServerStatusUpdated(message));
+
+        // 1. Listen for messages coming from the background isolate
+        receivePort.listen((message) {
+          debugPrint("ISOLATE MESSAGE: $message"); // Debug Print
+          if (message is String) {
+            bloc.add(ServerStatusUpdated(message));
           }
         });
-        return bloc..add(SystemAppStarted());
 
+        // 2. Monitor internet connectivity changes
+        Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+          final bool isConnected = !results.contains(ConnectivityResult.none);
+          debugPrint("CONNECTIVITY: isConnected = $isConnected");
+          bloc.add(ConnectivityChanged(isConnected));
+        });
+
+        // Trigger initial app start logic
+        return bloc..add(SystemAppStarted());
       },
-      child: MaterialApp(
+      child: const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: const RootScreen(),
+        home: RootScreen(),
       ),
     );
   }

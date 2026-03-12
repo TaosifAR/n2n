@@ -9,7 +9,7 @@ class SettingsRepository {
     return AppSettings(
       isMaintenance: false,
       latestVersion: '1.0.5',
-      isUpdateRequired: false,
+      isUpdateRequired: true,
       serverStatus: 'online',
     );
   }
