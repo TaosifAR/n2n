@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:n2n/data/model/urgent_report_model.dart';
+import 'package:n2n/data/repositories/report_repository.dart';
 
 class UrgentReportScreen extends StatefulWidget {
   const UrgentReportScreen({super.key});
@@ -86,32 +87,45 @@ class _UrgentReportScreenState extends State<UrgentReportScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                 onPressed: () {
+                 onPressed: () async {
   if (_formKey.currentState!.validate()) {
-    // 1. Create the request object using the 10 required fields
-    final reportRequest = UrgentHelpRequest(
-      reporterName: _nameController.text.trim(),
-      reporterPhone: _phoneController.text.trim(),
-      reporterEmail: _emailController.text.trim(),
-      subjectCategory: _categoryController.text.trim(),
-      estimatedAge: _ageController.text.trim(),
+    // 1. Create the model object with the 10 required fields
+    final report = UrgentHelpRequest(
+      reporterName: _nameController.text,
+      reporterPhone: _phoneController.text,
+      reporterEmail: _emailController.text,
+      subjectCategory: _categoryController.text,
+      estimatedAge: _ageController.text,
       isLifeThreatening: _isLifeThreatening,
-      description: _descriptionController.text.trim(),
-      lat: _lat,  // Currently mocked as 22.3475
-      long: _long, // Currently mocked as 91.8123
-      landmark: _landmarkController.text.trim(),
+      description: _descriptionController.text,
+      lat: 22.3475, // Temporarily hardcoded for now
+      long: 91.8123, // Temporarily hardcoded for now
+      landmark: _landmarkController.text,
     );
 
-    // 2. Log it for debugging (to see the JSON structure in terminal)
-    debugPrint("Submitting Report: ${reportRequest.toJson()}");
+    // 2. Call the Repository to send data to the server
+    final repo = ReportRepository();
+    final success = await repo.submitUrgentReport(report);
 
-    // 3. Show a success message for now
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Emergency report sent for ${reportRequest.reporterName}"),
-        backgroundColor: Colors.green,
-      ),
-    );
+    // 3. Provide feedback to the user
+    if (!mounted) return; // Check if the widget is still in the tree
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Success! Report sent to the fake server."),
+          backgroundColor: Colors.green,
+        ),
+      );
+      // Optional: Navigate back or clear the form here
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Error! Failed to send report."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 },
                   style: ElevatedButton.styleFrom(
